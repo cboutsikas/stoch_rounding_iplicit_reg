@@ -1,4 +1,4 @@
-using Pkg, LinearAlgebra, FileIO, JLD2, DelimitedFiles
+using Pkg, LinearAlgebra, FileIO, JLD2, DelimitedFiles, StatsPlots, LaTeXStrings
 
 #= 
 
@@ -52,6 +52,15 @@ number of rows, n, k*n, k*10*n we save the smallest singular values, the normali
 non-normalized minimum variance for all the combinations indicated by d, dec_pos. This function 
 returns nothing.
 -------- function create_store_mats_sigma_min_zero() --------------------------------------
+
+-------- function make_plots() -------------------------------------------------------
+This function takes as input two arrays S_1, V which represent the smallest singular
+values and the respective bounds (see equation 1.2). It also requires a vector of
+strings representing the number of columns, the array p with the precision options
+(see Section 5), and a name string for storing the plots. Subsequently, for each different
+value of p, it stores a separate pdf. Fially, all the separate pdfs are being merged
+and stored to one pdf file.
+-------- function make_plots() -------------------------------------------------------
 
 =#
 
@@ -203,13 +212,64 @@ function create_store_mats_sigma_min_zero(n::Int, d::AbstractArray, dec_pos::Abs
 
 end
 
+function make_plots(S_1::AbstractArray, V::AbstractArray, string_d::Vector{String}, p::AbstractArray, name_plot::String)
+    k = length(p);
+    pdf_files = String[];
+    for i in eachindex(p)
+        S = zeros(3,3);
+        S[:,1] = S_1[:,i+1];
+        S[:,2] = S_1[:,i+1+k];
+        S[:,3] = S_1[:,i+1+2*k];
 
+        if i == 1
+            groupedbar(string_d, S,  bar_width=0.7, fillalpha = 0.5, bar_position = :dodge, yaxis = :log10,
+            label = [L"\sigma_{\min}(\tilde{A}), n = 10^{4}" L"\sigma_{\min}(\tilde{A}), n = 10^{5}" L"\sigma_{\min}(\tilde{A}), n = 10^{6}"],
+            legend = :bottomright);
+            scatter!([0.27,1.27,2.27], sqrt.(V[:,i]), markersize = 10, color = 1, markershape = :star, label = L"\mathcal{R}\sqrt{n \nu}, n = 10^{4}");
+            scatter!([0.5,1.5,2.5], sqrt.(V[:,i+k]), markersize = 10, color = 2, markershape = :star, label = L"\mathcal{R}\sqrt{n \nu}, n = 10^{5}");
+            scatter!([0.73,1.73,2.73], sqrt.(V[:,i+2*k]), markersize = 10, color = 3, markershape = :star, label = L"\mathcal{R}\sqrt{n \nu}, n = 10^{6}");
+            title!(L"p = %$i");
+            savefig(name_plot*string(i)*".pdf");
+            push!(pdf_files, name_plot*string(i)*".pdf");
+
+        else
+            groupedbar(string_d, S,  bar_width=0.7, fillalpha = 0.5, legend = false, bar_position = :dodge, yaxis = :log10);
+            scatter!([0.27,1.27,2.27], sqrt.(V[:,i]), markersize = 10, color = 1, markershape = :star);
+            scatter!([0.5,1.5,2.5], sqrt.(V[:,i+k]), markersize = 10, color = 2, markershape = :star);
+            scatter!([0.73,1.73,2.73], sqrt.(V[:,i+2*k]), markersize = 10, color = 3, markershape = :star);
+            title!(L"p = %$i");
+            savefig(name_plot*string(i)*".pdf");
+            push!(pdf_files, name_plot*string(i)*".pdf");
+        end
+
+
+    end
+
+    output_file = name_plot*".pdf";
+    cmd = `pdftk $pdf_files cat output $output_file`
+    run(cmd);
+
+    return nothing;
+
+end
+
+
+# if you want to try different sizes, modify variables d and n accordnigly.
+# keep in mind that those experiments are meant for tall-and-thin matrices
+# so n should be >= d for each size combination.
+#=
 d = [10, 100, 1000]; n = 10^4;
 
 dec_pos = collect(1:5); k = 10;
 
 name_1 = "randn_10e4_"; name_2 = "10e5_";
 name_3 = "10e6_";
+=#
+d = [5, 15, 40]; n = 50;
+dec_pos = collect(1:5); k = 10;
+
+name_1 = "randn_50_"; name_2 = "500_";
+name_3 = "5000_";
 
 if !isdir("data_results")
     mkdir("data_results")
@@ -218,6 +278,12 @@ end
 cd("data_results"); 
 
 create_store_mats_sigma_min_zero(n, d, dec_pos, name_1, name_2, name_3, k);
+name = name_1*name_2*name_3;
+S_all = FileIO.load(name*"0_all_sigmas.jld2", "S_all");
+V_all = FileIO.load(name*"0_all_vars.jld2", "V_all");
+
+# call function for plotting
+make_plots(S_all, V_all, string.(d), dec_pos, name*"sigma_0_");
 
 cd("..");
 
