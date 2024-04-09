@@ -257,19 +257,11 @@ end
 # if you want to try different sizes, modify variables d and n accordnigly.
 # keep in mind that those experiments are meant for tall-and-thin matrices
 # so n should be >= d for each size combination.
-#=
 d = [10, 100, 1000]; n = 10^4;
-
 dec_pos = collect(1:5); k = 10;
 
 name_1 = "randn_10e4_"; name_2 = "10e5_";
 name_3 = "10e6_";
-=#
-d = [5, 15, 40]; n = 50;
-dec_pos = collect(1:5); k = 10;
-
-name_1 = "randn_50_"; name_2 = "500_";
-name_3 = "5000_";
 
 if !isdir("data_results")
     mkdir("data_results")
