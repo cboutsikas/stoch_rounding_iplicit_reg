@@ -181,7 +181,7 @@ function create_store_mats_sigma_min(n::Int, d::AbstractArray, dec_pos::Abstract
         FileIO.save(name*"10e-2_all_vars_norm.jld2", "V_norm_all", V_norm_all);
         writedlm(name*"10e-2_all_vars_norm.txt",V_norm_all);
 
-        # This is for n = 10^6, k=100
+        # This is for n = 10^5, k=10
         S_all[j,g+2:2*g+1], V_all[j, g+1:2*g], V_norm_all[j,g+1:2*g] = run_SR_once(create_stack_mat(A_G,k), dec_pos);
 
         FileIO.save(name*"10e-2_all_sigmas.jld2", "S_all", S_all);
@@ -193,7 +193,7 @@ function create_store_mats_sigma_min(n::Int, d::AbstractArray, dec_pos::Abstract
         FileIO.save(name*"10e-2_all_vars_norm.jld2", "V_norm_all", V_norm_all);
         writedlm(name*"10e-2_all_vars_norm.txt",V_norm_all);
 
-        # This is for n = 10^7, k=1000
+        # This is for n = 10^6, k=100
         S_all[j,2*g+2:end], V_all[j, 2*g+1:end], V_norm_all[j,2*g+1:end] = run_SR_once(create_stack_mat(A_G,k*10), dec_pos);
 
         FileIO.save(name*"10e-2_all_sigmas.jld2", "S_all", S_all);
@@ -258,7 +258,6 @@ end
 # keep in mind that those experiments are meant for tall-and-thin matrices
 # so n should be >= d for each size combination.
 d = [10, 100, 1000]; n = 10^4;
-
 dec_pos = collect(1:5); k = 10;
 
 
